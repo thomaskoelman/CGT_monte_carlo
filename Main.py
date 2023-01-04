@@ -5,49 +5,54 @@ from Agent import Agent
 import matplotlib.pyplot as plt
 from LookupTable import LookupTable
 
+GAME_SIZE = 16
+
 def main():
     n = 200
     r = 0.1
     f_ab = 0.2
     f_nash = 0.1
     err_lvls = [.0, .001, .002, .004, .008, .016, .032, .064, .128, .256, .512, 1.0]
-    nb_labels = sum((2, 2))
-    j_buckets = get_buckets(0, 1, 0.1)
-    k_buckets = get_buckets(-1, 1, 0.2)
+    nb_labels = sum((GAME_SIZE, GAME_SIZE))
+    j_buckets = get_buckets(0, 1, 0.01)
+    k_buckets = get_buckets(-1., 1., 0.01)
     lookup = LookupTable(j_buckets, k_buckets, err_lvls)
     agent_1 = Agent(n, nb_labels, err_lvls, lookup)
     agent_2 = Agent(n, nb_labels, err_lvls, lookup)
 
     games = []
     for _ in range(1000):
-        A, B = random_matrix(2)
+        A, B = random_matrix(GAME_SIZE)
         g = Game(A, B)
         games.append(g)
 
     rewards_1 = []
     rewards_2 = []
     cooperation_1 = []
+    y_axis = []
 
-    for game in games:
+    for i, game in enumerate(games):
+        if i%100 == 0:
+            print("progress: ", i)
         agent_1.observe_game(game)
         agent_2.observe_game(game.switch_viewpoint())
 
         move_1 = agent_1.pick_move(r)
         move_2 = agent_2.pick_move(r)
 
-        r_1 = agent_1.award(move_1, move_2)
-        r_2 = agent_2.award(move_2, move_1)
-        rewards_1.append(r_1)
-        rewards_2.append(r_2)
-        cooperation_1.append(agent_1.cooperation_lvl())
-        print(agent_1.cooperation_lvl())
+        # r_1 = agent_1.award(move_1, move_2)
+        # r_2 = agent_2.award(move_2, move_1)
+        # rewards_1.append(r_1)
+        # rewards_2.append(r_2)
+        #cooperation_1.append(agent_1.cooperation_lvl())
+        y_axis.append(agent_1.get_opp_attitude())
 
         agent_1.update_model(move_2, err_lvls, f_ab, f_nash)
         agent_2.update_model(move_1, err_lvls, f_ab, f_nash)
 
     fig, ax = plt.subplots(figsize=(8, 8))
     x_axis = list(range(0, 1000, 10))
-    ax.plot(x_axis, cooperation_1[0:1000:10])
+    ax.plot(x_axis, y_axis[0:1000:10])
     plt.show()
 
 

@@ -9,6 +9,8 @@ class Agent:
         prob = init_err_probability(err_lvls)
         particles= init_particles(nb_labels, n)
         self.model = MonteCarlo(prob, particles, lookup)
+        for p in self.model.particles:
+            print(p)
         self.game = None
         self.cumreward = 0
 
@@ -23,7 +25,7 @@ class Agent:
         bel_opp = self.model.estimate_bel()
         label = int(self.model.estimate_opponents_method())
 
-        att_agent = att_opp + r
+        att_agent = max(min(att_opp + r, 1), 0)
         modded_game: Game = self.game.modify(att_agent, att_opp)
         ne_agent, ne_opp = modded_game.lemke_howson(label)
         move: int = pick_from_distribution(ne_agent)
@@ -38,6 +40,16 @@ class Agent:
         reward = game.get_payoff(action_agent, action_opp)
         self.cumreward += reward
         return reward
+
+    def get_attitude(self, r: float):
+        att_opp = self.model.estimate_att()
+        return max(min(att_opp + r, 1), 0)
+
+    def get_opp_attitude(self):
+        return self.model.estimate_att()
+
+    def get_opp_belief(self):
+        return self.model.estimate_bel()
 
     def cooperation_lvl(self):
         return self.model.coop()

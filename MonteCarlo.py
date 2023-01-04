@@ -50,10 +50,10 @@ class MonteCarlo:
         for particle in new_particles:
             particle.set_att(np.random.normal(particle.attitude(), err * f_ab))
             particle.set_bel(np.random.normal(particle.belief(), err * f_ab))
-        if np.random.random() < (err * f_nash):
-            shape = g.shape()
-            labels = range(sum(shape))
-            for particle in new_particles:
+            rand = np.random.random()
+            if (rand < (err * f_nash)):
+                shape = g.shape()
+                labels = range(sum(shape))
                 label = np.random.choice(labels)
                 particle.set_nash(label)
 
@@ -89,17 +89,18 @@ def est_error(err_distr, err_lvls: list):
    return error
 
 def normalize_dictionary(d: dict):
-    print(d)
     if sum(d.values()) == 0:
         factor = 1
     else:
         factor = 1.0 / sum(d.values())
-    print("factor: ", factor)
     for k in d:
         d[k] = d[k] * factor
 
 def normalize_list(l):
-    factor = 1 / sum(l)
+    try:
+        factor = 1 / sum(l)
+    except RuntimeWarning:
+        print("factor: ", factor)
     for i, e in enumerate(l):
         l[i] = e * factor
 
@@ -111,6 +112,7 @@ def pick_from_distribution(distribution: list) -> int:
         if rand < prob:
             return action
     return -1
+
 
 
 
